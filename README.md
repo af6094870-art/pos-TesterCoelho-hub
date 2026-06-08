@@ -2364,60 +2364,109 @@ Tabs.Main:AddToggle("Test", {
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local VirtualUser = game:GetService("VirtualUser")
+
 local LocalPlayer = Players.LocalPlayer
 
-_G.TestVoarCakePrince = false
+-- VARIÁVEIS DE CONTROLE
+_G.AutoFarmCakePrince = false
+-- _G.ChooseWP2 e _G.VelocidadeFarmBone já vêm do seu menu principal!
 
--- =====================================================================
--- FUNÇÃO DE VOO COMPATÍVEL COM ANTI-CHEAT (COMPLETA SEM CORTES)
--- =====================================================================
-local function voarFisicoAntiCheat(hrp, posicaoAlvo, humanoid)
-    -- Evita que o anti-cheat detecte o estado de "Falling" ou "Freefall"
+-- Conexão para manter o Noclip ativo
+local NoclipConnection = nil
+
+-- FUNÇÃO DE VOO FÍSICO ANTI-CHEAT (Com o controle de velocidade recuperado)
+local function voarAteOPorrinha(hrp, posicaoAlvo, humanoid)
     humanoid:ChangeState(Enum.HumanoidStateType.Physics)
     
-    -- Cria uma força de velocidade linear nativa se ela não existir
     local bv = hrp:FindFirstChild("AntiCheatFlyForce")
     if not bv then
         bv = Instance.new("BodyVelocity")
         bv.Name = "AntiCheatFlyForce"
-        bv.MaxForce = Vector3.new(9e9, 9e9, 9e9) -- Força total contra a gravidade
+        bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
         bv.Parent = hrp
     end
     
-    -- Mantém o loop de movimentação suave atualizando frame por frame
-    while _G.TestVoarCakePrince and hrp and hrp.Parent and (hrp.Position - posicaoAlvo).Magnitude > 3 do
+    while _G.AutoFarmCakePrince and hrp and hrp.Parent and (hrp.Position - posicaoAlvo).Magnitude > 3 do
         local distanciaVector = (posicaoAlvo - hrp.Position)
         local direcao = distanciaVector.Unit
         local distancia = distanciaVector.Magnitude
         
-        -- Puxa o controle do seu Slider principal de velocidade
-        local velocidadeMax = (_G.VelocidadeFarmBone and _G.VelocidadeFarmBone > 0) and _G.VelocidadeFarmBone or 300
+        -- Puxa a velocidade da sua variável global, se não existir usa 85 como limite seguro
+        local velocidadeMax = (_G.VelocidadeFarmBone and _G.VelocidadeFarmBone > 0) and _G.VelocidadeFarmBone or 85
+        -- Reduz a velocidade bem na chegada para suavizar o freio no Boss
+        local velocidadeAtual = distancia < 20 and (velocidadeMax * 0.3) or velocidadeMax
         
-        -- OTIMIZAÇÃO ANTI-CHEAT: Reduz a velocidade na chegada para não dar tranco
-        local velocidadeAtual = distancia < 15 and (velocidadeMax * 0.4) or velocidadeMax
-        
-        -- Aplica a velocidade fisicamente na direção correta
         bv.Velocity = direcao * velocidadeAtual
-        
-        -- Faz o personagem olhar fixamente para o alvo (evita giros doidos)
         hrp.CFrame = CFrame.lookAt(hrp.Position, Vector3.new(posicaoAlvo.X, hrp.Position.Y, posicaoAlvo.Z))
         
         RunService.Heartbeat:Wait()
     end
+    
+    if bv then bv:Destroy() end
+    humanoid:ChangeState(Enum.HumanoidStateType.Standing)
 end
 
--- =====================================================================
--- TOGGLE NA ABA STACK (Ajustado e Limpo)
--- =====================================================================
-Tabs.Stack:AddToggle("TestVoarCakePrince", {
-    Title = "kill cake prince",
+-- FUNÇÃO DO NOCLIP
+local function setNoclip(state)
+    if state then
+        if not NoclipConnection then
+            NoclipConnection = RunService.Stepped:Connect(function()
+                local character = LocalPlayer.Character
+                if character then
+                    for _, part in ipairs(character:GetDescendants()) do
+                        if part:IsA("BasePart") and part.CanCollide then
+                            part.CanCollide = false
+                        end
+                    end
+                end
+            end)
+        end
+    else
+        if NoclipConnection then
+            NoclipConnection:Disconnect()
+            NoclipConnection = nil
+        end
+    end
+end
+
+-- FUNÇÃO PARA EQUIPAR ARMA (_G.ChooseWP2)
+local function equiparArmaOficial()
+    local character = LocalPlayer.Character
+    local backpack = LocalPlayer:FindFirstChild("Backpack")
+    local armaNome = _G.ChooseWP2
+    
+    if character and armaNome then
+        if character:FindFirstChild(armaNome) then
+            return 
+        end
+        
+        if backpack then
+            local ferramenta = backpack:FindFirstChild(armaNome)
+            if ferramenta and ferramenta:IsA("Tool") then
+                local humanoid = character:FindFirstChildOfClass("Humanoid")
+                if humanoid then
+                    humanoid:EquipTool(ferramenta)
+                end
+            end
+        end
+    end
+end
+
+-- TOGGLE DO FARM DO CAKE PRINCE
+Tabs.seaevent:AddToggle("AutoFarmCakePrinceToggle", {
+    Title = "Auto Farm Cake Prince",
     Default = false,
     Callback = function(Value)
-        _G.TestVoarCakePrince = Value
-
+        _G.AutoFarmCakePrince = Value
+        
         if Value then
             task.spawn(function()
-                while _G.TestVoarCakePrince do
+                setNoclip(true)
+                
+                while _G.AutoFarmCakePrince do
                     pcall(function()
                         local character = LocalPlayer.Character
                         local hrp = character and character:FindFirstChild("HumanoidRootPart")
@@ -2427,55 +2476,45 @@ Tabs.Stack:AddToggle("TestVoarCakePrince", {
                             task.wait(0.5)
                             return 
                         end
-
-                        -- Escaneamento de localização do Boss
-                        local boss = workspace:FindFirstChild("Enemies") and workspace.Enemies:FindFirstChild("Cake Prince") or workspace:FindFirstChild("Cake Prince")
-
-                        if not boss then
-                            -- Se não achar o boss, limpa a força física para não bugar
-                            local bv = hrp:FindFirstChild("AntiCheatFlyForce")
-                            if bv then bv:Destroy() end
-                            task.wait(0.5)
-                            return
-                        end
-
-                        local bossHrp = boss:FindFirstChild("HumanoidRootPart")
-                        local bossHumanoid = boss:FindFirstChildOfClass("Humanoid")
-
-                        if bossHrp and bossHumanoid and bossHumanoid.Health > 0 then
-                            -- Equip Weapon nativo (Fica forçando o clique/equip)
-                            if type(_G.ChooseWP2) == "function" and not character:FindFirstChildOfClass("Tool") then
-                                _G.ChooseWP2()
-                            end
-
-                            -- Calcula a posição de ataque seguro (3 studs acima do alvo)
-                            local posicaoAlvo = bossHrp.Position + Vector3.new(0, 3, 0)
+                        
+                        local cakePrince = ReplicatedStorage:FindFirstChild("Cake Prince") or (Workspace:FindFirstChild("NPCs") and Workspace.NPCs:FindFirstChild("Cake Prince"))
+                        
+                        if cakePrince and cakePrince:FindFirstChild("HumanoidRootPart") and cakePrince:FindFirstChildOfClass("Humanoid") and cakePrince:FindFirstChildOfClass("Humanoid").Health > 0 then
                             
-                            -- Inicia o voo físico suave bypassando o anti-cheat
-                            voarFisicoAntiCheat(hrp, posicaoAlvo, humanoid)
+                            local bossHrp = cakePrince.HumanoidRootPart
+                            
+                            equiparArmaOficial()
+                            
+                            if (hrp.Position - bossHrp.Position).Magnitude > 5 then
+                                voarAteOPorrinha(hrp, bossHrp.Position, humanoid)
+                            else
+                                -- Mantém grudado acima dele batendo
+                                hrp.CFrame = bossHrp.CFrame * CFrame.new(0, 4, 1) 
+                                
+                                VirtualUser:CaptureController()
+                                VirtualUser:ClickButton1(Vector2.new(50, 50))
+                            end
+                        else
+                            task.wait(0.5)
                         end
                     end)
-                    task.wait(0.05)
+                    RunService.Heartbeat:Wait()
                 end
                 
-                -- Limpeza absoluta ao desligar a Toggle manual
+                setNoclip(false)
                 pcall(function()
                     local character = LocalPlayer.Character
                     local hrp = character and character:FindFirstChild("HumanoidRootPart")
-                    local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-                    
                     if hrp and hrp:FindFirstChild("AntiCheatFlyForce") then
                         hrp.AntiCheatFlyForce:Destroy()
                     end
-                    if humanoid then
-                        humanoid:ChangeState(Enum.HumanoidStateType.Standing)
-                    end
                 end)
             end)
+        else
+            setNoclip(false)
         end
     end
 })
-
 _G.TeleportKitsune = false
 
 local TweenService = game:GetService("TweenService")
