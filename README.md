@@ -2683,7 +2683,7 @@ local LocalPlayer = Players.LocalPlayer
 _G.BarcoSelecionado = "Guardian" -- Valor padrão inicial
 _G.AutoSpawnBoat = false
 
--- FUNÇÃO DE VOO FÍSICO ANTI-CHEAT
+-- FUNÇÃO DE VOO FÍSICO ANTI-CHEAT COM NOCLIP INCLUSO
 local function voarFisicoAntiCheat(hrp, posicaoAlvo, humanoid)
     humanoid:ChangeState(Enum.HumanoidStateType.Physics)
     
@@ -2695,6 +2695,21 @@ local function voarFisicoAntiCheat(hrp, posicaoAlvo, humanoid)
         bv.Parent = hrp
     end
     
+    -- Conexão para deixar o personagem em Noclip enquanto voa
+    local noclipLoop
+    noclipLoop = RunService.Stepped:Connect(function()
+        if _G.AutoSpawnBoat and hrp and hrp.Parent then
+            local char = hrp.Parent
+            for _, v in ipairs(char:GetChildren()) do
+                if v:IsA("BasePart") then
+                    v.CanCollide = false
+                end
+            end
+        else
+            noclipLoop:Disconnect()
+        end
+    end)
+    
     while _G.AutoSpawnBoat and hrp and hrp.Parent and (hrp.Position - posicaoAlvo).Magnitude > 4 do
         local distanciaVector = (posicaoAlvo - hrp.Position)
         local direcao = distanciaVector.Unit
@@ -2705,6 +2720,8 @@ local function voarFisicoAntiCheat(hrp, posicaoAlvo, humanoid)
         RunService.Heartbeat:Wait()
     end
     
+    -- Desliga o Noclip e limpa as forças físicas ao chegar no destino
+    if noclipLoop then noclipLoop:Disconnect() end
     if bv then bv:Destroy() end
     humanoid:ChangeState(Enum.HumanoidStateType.Standing)
 end
@@ -2735,7 +2752,7 @@ Tabs.seaevent:AddToggle("AutoSpawnBoatToggle", {
                     
                     if not hrp or not humanoid or humanoid.Health <= 0 then return end
                     
-                    -- ETAPA 1: Voar até o Luxury Boat Dealer
+                    -- ETAPA 1: Voar até o Luxury Boat Dealer (Com Noclip ativo)
                     local dealerPart = Workspace:FindFirstChild("NPCs") and Workspace.NPCs:FindFirstChild("Luxury Boat Dealer") and Workspace.NPCs["Luxury Boat Dealer"]:FindFirstChild("UpperTorso")
                     
                     if dealerPart then
@@ -2743,7 +2760,7 @@ Tabs.seaevent:AddToggle("AutoSpawnBoatToggle", {
                         if not _G.AutoSpawnBoat then return end
                         task.wait(0.3)
                         
-                        -- ETAPA 2: Executa os args e o remote EXATAMENTE juntos (uma única vez)
+                        -- ETAPA 2: Executa os args e o remote juntos (uma única vez)
                         local args = {
                             "BuyBoat",
                             _G.BarcoSelecionado
@@ -2756,7 +2773,7 @@ Tabs.seaevent:AddToggle("AutoSpawnBoatToggle", {
                         warn("UpperTorso do Luxury Boat Dealer nao encontrado!")
                     end
                     
-                    -- ETAPA 3: Voar até o VehicleSeat do barco selecionado que foi criado
+                    -- ETAPA 3: Voar até o VehicleSeat do barco (Com Noclip ativo)
                     if _G.AutoSpawnBoat then
                         local pastaBoats = Workspace:FindFirstChild("Boats")
                         local meuBarco = pastaBoats and pastaBoats:FindFirstChild(_G.BarcoSelecionado)
