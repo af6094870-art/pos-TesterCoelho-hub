@@ -2673,6 +2673,74 @@ Tabs.Stack:AddToggle("KillSoulReaperToggle", {
     end
 })
 
+_G.KillRipIndra = false
+
+-- TOGGLE PARA CAÇAR O RIP INDRA TRUE FORM
+Tabs.Stack:AddToggle("KillRipIndraToggle", {
+    Title = "Kill Rip Indra",
+    Default = false,
+    Callback = function(Value)
+        _G.KillRipIndra = Value
+
+        if Value then
+            task.spawn(function()
+                while _G.KillRipIndra do
+                    pcall(function()
+                        local character = LocalPlayer.Character
+                        local hrp = character and character:FindFirstChild("HumanoidRootPart")
+                        local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+                        
+                        if not hrp or not humanoid or humanoid.Health <= 0 then 
+                            task.wait(0.5)
+                            return 
+                        end
+
+                        -- Escaneia a localização exata na pasta workspace.Enemies
+                        local boss = workspace:FindFirstChild("Enemies") and workspace.Enemies:FindFirstChild("rip_indra True Form") or workspace:FindFirstChild("rip_indra True Form")
+
+                        -- Se o Boss não estiver spawnado no servidor, limpa as forças e espera
+                        if not boss then
+                            local bv = hrp:FindFirstChild("AntiCheatFlyForce")
+                            if bv then bv:Destroy() end
+                            task.wait(0.5)
+                            return
+                        end
+
+                        local bossHrp = boss:FindFirstChild("HumanoidRootPart")
+                        local bossHumanoid = boss:FindFirstChildOfClass("Humanoid")
+
+                        -- Se o rip_indra estiver vivo, desce o cacete nele
+                        if bossHrp and bossHumanoid and bossHumanoid.Health > 0 then
+                            
+                            -- Executa a sua função nativa de equipar a arma para atacar
+                            if type(_G.ChooseWP2) == "function" and not character:FindFirstChildOfClass("Tool") then
+                                _G.ChooseWP2()
+                            end
+
+                            -- Calcula o ponto cego (3 studs acima da cabeça dele para atacar com total segurança)
+                            local posicaoAlvo = bossHrp.Position + Vector3.new(0, 3, 0)
+                            
+                            -- Inicia o voo físico suave travando no Boss
+                            voarFisicoAntiCheat(hrp, posicaoAlvo, humanoid)
+                        end
+                    end)
+                    task.wait(0.05)
+                end
+                
+                -- Limpeza absoluta ao desligar a Toggle manualmente para você não ficar flutuando
+                pcall(function()
+                    local character = LocalPlayer.Character
+                    local hrp = character and character:FindFirstChild("HumanoidRootPart")
+                    if hrp and hrp:FindFirstChild("AntiCheatFlyForce") then
+                        hrp.AntiCheatFlyForce:Destroy()
+                    end
+                end)
+            end)
+        end
+    end
+})
+
+
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
@@ -2830,73 +2898,6 @@ Tabs.seaevent:AddToggle("AutoSpawnBoatToggle", {
                 if hrp and hrp:FindFirstChild("AntiCheatFlyForce") then
                     hrp.AntiCheatFlyForce:Destroy()
                 end
-            end)
-        end
-    end
-})
-
-_G.KillRipIndra = false
-
--- TOGGLE PARA CAÇAR O RIP INDRA TRUE FORM
-Tabs.Stack:AddToggle("KillRipIndraToggle", {
-    Title = "Kill Rip Indra",
-    Default = false,
-    Callback = function(Value)
-        _G.KillRipIndra = Value
-
-        if Value then
-            task.spawn(function()
-                while _G.KillRipIndra do
-                    pcall(function()
-                        local character = LocalPlayer.Character
-                        local hrp = character and character:FindFirstChild("HumanoidRootPart")
-                        local humanoid = character and character:FindFirstChildOfClass("Humanoid")
-                        
-                        if not hrp or not humanoid or humanoid.Health <= 0 then 
-                            task.wait(0.5)
-                            return 
-                        end
-
-                        -- Escaneia a localização exata na pasta workspace.Enemies
-                        local boss = workspace:FindFirstChild("Enemies") and workspace.Enemies:FindFirstChild("rip_indra True Form") or workspace:FindFirstChild("rip_indra True Form")
-
-                        -- Se o Boss não estiver spawnado no servidor, limpa as forças e espera
-                        if not boss then
-                            local bv = hrp:FindFirstChild("AntiCheatFlyForce")
-                            if bv then bv:Destroy() end
-                            task.wait(0.5)
-                            return
-                        end
-
-                        local bossHrp = boss:FindFirstChild("HumanoidRootPart")
-                        local bossHumanoid = boss:FindFirstChildOfClass("Humanoid")
-
-                        -- Se o rip_indra estiver vivo, desce o cacete nele
-                        if bossHrp and bossHumanoid and bossHumanoid.Health > 0 then
-                            
-                            -- Executa a sua função nativa de equipar a arma para atacar
-                            if type(_G.ChooseWP2) == "function" and not character:FindFirstChildOfClass("Tool") then
-                                _G.ChooseWP2()
-                            end
-
-                            -- Calcula o ponto cego (3 studs acima da cabeça dele para atacar com total segurança)
-                            local posicaoAlvo = bossHrp.Position + Vector3.new(0, 3, 0)
-                            
-                            -- Inicia o voo físico suave travando no Boss
-                            voarFisicoAntiCheat(hrp, posicaoAlvo, humanoid)
-                        end
-                    end)
-                    task.wait(0.05)
-                end
-                
-                -- Limpeza absoluta ao desligar a Toggle manualmente para você não ficar flutuando
-                pcall(function()
-                    local character = LocalPlayer.Character
-                    local hrp = character and character:FindFirstChild("HumanoidRootPart")
-                    if hrp and hrp:FindFirstChild("AntiCheatFlyForce") then
-                        hrp.AntiCheatFlyForce:Destroy()
-                    end
-                end)
             end)
         end
     end
