@@ -2683,7 +2683,10 @@ local LocalPlayer = Players.LocalPlayer
 _G.BarcoSelecionado = "Guardian" -- Valor padrão inicial
 _G.AutoSpawnBoat = false
 
--- FUNÇÃO DE VOO FÍSICO ANTI-CHEAT COM NOCLIP INCLUSO
+-- Conexão para manter o Noclip ativo
+local NoclipConnection = nil
+
+-- FUNÇÃO DE VOO FÍSICO ANTI-CHEAT
 local function voarFisicoAntiCheat(hrp, posicaoAlvo, humanoid)
     humanoid:ChangeState(Enum.HumanoidStateType.Physics)
     
@@ -2695,21 +2698,6 @@ local function voarFisicoAntiCheat(hrp, posicaoAlvo, humanoid)
         bv.Parent = hrp
     end
     
-    -- Conexão para deixar o personagem em Noclip enquanto voa
-    local noclipLoop
-    noclipLoop = RunService.Stepped:Connect(function()
-        if _G.AutoSpawnBoat and hrp and hrp.Parent then
-            local char = hrp.Parent
-            for _, v in ipairs(char:GetChildren()) do
-                if v:IsA("BasePart") then
-                    v.CanCollide = false
-                end
-            end
-        else
-            noclipLoop:Disconnect()
-        end
-    end)
-    
     while _G.AutoSpawnBoat and hrp and hrp.Parent and (hrp.Position - posicaoAlvo).Magnitude > 4 do
         local distanciaVector = (posicaoAlvo - hrp.Position)
         local direcao = distanciaVector.Unit
@@ -2720,10 +2708,31 @@ local function voarFisicoAntiCheat(hrp, posicaoAlvo, humanoid)
         RunService.Heartbeat:Wait()
     end
     
-    -- Desliga o Noclip e limpa as forças físicas ao chegar no destino
-    if noclipLoop then noclipLoop:Disconnect() end
     if bv then bv:Destroy() end
     humanoid:ChangeState(Enum.HumanoidStateType.Standing)
+end
+
+-- FUNÇÃO PARA ATIVAR/DESATIVAR NOCLIP
+local function setNoclip(state)
+    if state then
+        if not NoclipConnection then
+            NoclipConnection = RunService.Stepped:Connect(function()
+                local character = LocalPlayer.Character
+                if character then
+                    for _, part in ipairs(character:GetDescendants()) do
+                        if part:IsA("BasePart") and part.CanCollide then
+                            part.CanCollide = false
+                        end
+                    end
+                end
+            end)
+        end
+    else
+        if NoclipConnection then
+            NoclipConnection:Disconnect()
+            NoclipConnection = nil
+        end
+    end
 end
 
 -- 1. DROPDOWN DE SELEÇÃO DO BARCO
@@ -2752,7 +2761,7 @@ Tabs.seaevent:AddToggle("AutoSpawnBoatToggle", {
                     
                     if not hrp or not humanoid or humanoid.Health <= 0 then return end
                     
-                    -- ETAPA 1: Voar até o Luxury Boat Dealer (Com Noclip ativo)
+                    -- ETAPA 1: Voar até o Luxury Boat Dealer
                     local dealerPart = Workspace:FindFirstChild("NPCs") and Workspace.NPCs:FindFirstChild("Luxury Boat Dealer") and Workspace.NPCs["Luxury Boat Dealer"]:FindFirstChild("UpperTorso")
                     
                     if dealerPart then
@@ -2760,7 +2769,7 @@ Tabs.seaevent:AddToggle("AutoSpawnBoatToggle", {
                         if not _G.AutoSpawnBoat then return end
                         task.wait(0.3)
                         
-                        -- ETAPA 2: Executa os args e o remote juntos (uma única vez)
+                        -- ETAPA 2: Executa os args e o remote EXATAMENTE juntos (uma única vez)
                         local args = {
                             "BuyBoat",
                             _G.BarcoSelecionado
@@ -2773,13 +2782,16 @@ Tabs.seaevent:AddToggle("AutoSpawnBoatToggle", {
                         warn("UpperTorso do Luxury Boat Dealer nao encontrado!")
                     end
                     
-                    -- ETAPA 3: Voar até o VehicleSeat do barco (Com Noclip ativo)
+                    -- ETAPA 3: Voar até o VehicleSeat do barco selecionado que foi criado
                     if _G.AutoSpawnBoat then
                         local pastaBoats = Workspace:FindFirstChild("Boats")
                         local meuBarco = pastaBoats and pastaBoats:FindFirstChild(_G.BarcoSelecionado)
                         local assento = meuBarco and meuBarco:FindFirstChild("VehicleSeat")
                         
                         if assento then
+                            -- 🔥 ATIVA O NOCLIP AQUI ANTES DE IR PRO ASSEENTO DO BARCO
+                            setNoclip(true)
+                            
                             voarFisicoAntiCheat(hrp, assento.Position, humanoid)
                             
                             -- Senta no banco quando chega perto
@@ -2792,10 +2804,14 @@ Tabs.seaevent:AddToggle("AutoSpawnBoatToggle", {
                             warn("VehicleSeat do barco " .. tostring(_G.BarcoSelecionado) .. " nao encontrado!")
                         end
                     end
+                    
+                    -- Desliga o noclip após sentar com sucesso ou encerrar a sequência
+                    setNoclip(false)
                 end)
             end)
         else
-            -- Limpeza de forças caso desligue a toggle no meio do caminho
+            -- Limpeza de forças e desativar noclip caso desligue a toggle no meio do caminho
+            setNoclip(false)
             pcall(function()
                 local character = LocalPlayer.Character
                 local hrp = character and character:FindFirstChild("HumanoidRootPart")
@@ -2806,6 +2822,7 @@ Tabs.seaevent:AddToggle("AutoSpawnBoatToggle", {
         end
     end
 })
+
             -- Limpeza de forças caso desligue a toggle no meio do caminho
             pcall(function()
                 local character = LocalPlayer.Character
