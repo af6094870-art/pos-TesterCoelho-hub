@@ -2953,7 +2953,7 @@ _G.SelectNPC = "Blox Fruits Dealer"
 -- ==========================================
 
 if CurrentWorld == "World 1" then
-    Teleport1:Dropdown({
+    Teleport:AddDropdown({
         Name = "Select NPC ",
         Flag = "Dropdown",
         Items = {"Random Devil Fruit", "Blox Fruits Dealer", "Remove Devil Fruit", "Ability Teacher", "Dark Step", "Electro", "Fishman Karate"},
@@ -2963,7 +2963,7 @@ if CurrentWorld == "World 1" then
         end
     })
 elseif CurrentWorld == "World 2" then
-    Tabs.Teleport:Dropdown({
+    Tabs.Teleport:AddDropdown({
         Name = "Select NPC ",
         Flag = "Dropdown",
         Items = {"Dragon Breath", "Mysterious Man", "Mysterious Scientist", "Awakening Expert", "Nerd", "Bar Manager", "Blox Fruits Dealer", "Trevor", "Enhancement Editor", "Pirate Recruiter", "Marines Recruiter", "Chemist", "Cyborg", "Ghoul Mark", "Guashiem", "El Admin", "El Rodolfo", "Arowe"},
@@ -2973,7 +2973,7 @@ elseif CurrentWorld == "World 2" then
         end
     })
 elseif CurrentWorld == "World 3" then
-    Tabs.Teleport:Dropdown({
+    Tabs.Teleport:AddDropdown({
         Name = "Select NPC ",
         Flag = "Dropdown",
         Items = {"Blox Fruits Dealer", "Remove Devil Fruit", "Horned Man", "Hungry Man", "Previous Hero", "Butler", "Lunoven", "Trevor", "Elite Hunter", "Player Hunter", "Uzoth"},
