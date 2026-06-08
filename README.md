@@ -2456,7 +2456,7 @@ local function equiparArmaOficial()
 end
 
 -- TOGGLE DO FARM DO CAKE PRINCE
-Tabs.seaevent:AddToggle("AutoFarmCakePrinceToggle", {
+Tabs.Stack:AddToggle("AutoFarmCakePrinceToggle", {
     Title = "Auto Farm Cake Prince",
     Default = false,
     Callback = function(Value)
@@ -2927,6 +2927,180 @@ Tabs.Stack:AddToggle("KillRipIndraToggle", {
                     end
                 end)
             end)
+        end
+    end
+})
+
+
+repeat wait() until game:IsLoaded()
+
+local PlaceIds = {
+    [2753915549] = "World 1",
+    [4442272183] = "World 2",
+    [7449423635] = "World 3",
+    [79091703265657] = "World 2", -- Padronizado para bater com as condições abaixo
+    [996949360] = "World 2",
+    [100117331123089] = "World 3",
+}
+
+local CurrentWorld = PlaceIds[game.PlaceId] or "Desconhecido"
+
+-- Garante que a variável comece com um valor padrão seguro
+_G.SelectNPC = "Blox Fruits Dealer" 
+
+-- ==========================================
+-- 🏢 CRIAÇÃO DO DROPDOWN EXCLUSIVO POR MUNDO
+-- ==========================================
+
+if CurrentWorld == "World 1" then
+    Teleport1:Dropdown({
+        Name = "Select NPC ",
+        Flag = "Dropdown",
+        Items = {"Random Devil Fruit", "Blox Fruits Dealer", "Remove Devil Fruit", "Ability Teacher", "Dark Step", "Electro", "Fishman Karate"},
+        Default = 1,
+        Callback = function(Value)
+            _G.SelectNPC = Value
+        end
+    })
+elseif CurrentWorld == "World 2" then
+    Tabs.Teleport:Dropdown({
+        Name = "Select NPC ",
+        Flag = "Dropdown",
+        Items = {"Dragon Breath", "Mysterious Man", "Mysterious Scientist", "Awakening Expert", "Nerd", "Bar Manager", "Blox Fruits Dealer", "Trevor", "Enhancement Editor", "Pirate Recruiter", "Marines Recruiter", "Chemist", "Cyborg", "Ghoul Mark", "Guashiem", "El Admin", "El Rodolfo", "Arowe"},
+        Default = 1,
+        Callback = function(Value)
+            _G.SelectNPC = Value
+        end
+    })
+elseif CurrentWorld == "World 3" then
+    Tabs.Teleport:Dropdown({
+        Name = "Select NPC ",
+        Flag = "Dropdown",
+        Items = {"Blox Fruits Dealer", "Remove Devil Fruit", "Horned Man", "Hungry Man", "Previous Hero", "Butler", "Lunoven", "Trevor", "Elite Hunter", "Player Hunter", "Uzoth"},
+        Default = 1,
+        Callback = function(Value)
+            _G.SelectNPC = Value
+        end
+    })
+else
+    -- Caso o script seja injetado em um lugar desconhecido (como o Menu Principal)
+    Teleport1:Label({Title = "Mundo não suportado: " .. tostring(CurrentWorld)})
+end
+
+-- ==========================================
+-- ⚡ TOGGLE DO TELEPORTE (O LOOP DO TP)
+-- ==========================================
+
+Tabs.Teleport:AddToggle("Auto Teleporter Npc", {
+    Name = "Auto Teleporter Npc",
+    Flag = "Toggle",
+    Default = false,
+    Callback = function(Value)
+        _G.TeleportNPC = Value
+        
+        if _G.TeleportNPC then
+            task.spawn(function()
+                while _G.TeleportNPC do
+                    pcall(function()
+                        local character = game:GetService("Players").LocalPlayer.Character
+                        if not character or not character:FindFirstChild("HumanoidRootPart") then return end
+                        
+                        -- CONFIGURAÇÕES DOS TELEPORTES DISPARADOS PELO SEU DROPDOWN
+                        if _G.SelectNPC == "Dragon Breath" then
+                            topos(CFrame.new(703.372986, 186.985519, 654.522034))
+                        elseif _G.SelectNPC == "Mysterious Man" then
+                            topos(CFrame.new(-2574.43335, 1627.92371, -3739.35767))
+                        elseif _G.SelectNPC == "Mysterious Scientist" then
+                            topos(CFrame.new(-6437.87793, 250.645355, -4498.92773))
+                        elseif _G.SelectNPC == "Awakening Expert" then
+                            topos(CFrame.new(-408.098846, 16.0459061, 247.432846))
+                        elseif _G.SelectNPC == "Nerd" then
+                            topos(CFrame.new(-401.783722, 73.0859299, 262.306702))
+                        elseif _G.SelectNPC == "Bar Manager" then
+                            topos(CFrame.new(-385.84726, 73.0458984, 316.088806))
+                        elseif _G.SelectNPC == "Trevor" then
+                            topos(CFrame.new(-341.498322, 331.886444, 643.024963))
+                        elseif _G.SelectNPC == "Plokster" then
+                            topos(CFrame.new(-1885.16016, 88.3838196, -1912.28723))
+                        elseif _G.SelectNPC == "Enhancement Editor" then
+                            topos(CFrame.new(-346.820221, 72.9856339, 1194.36218))
+                        elseif _G.SelectNPC == "Pirate Recruiter" then  
+                            topos(CFrame.new(-428.072998, 72.9495239, 1445.32422))
+                        elseif _G.SelectNPC == "Marines Recruiter" then
+                            topos(CFrame.new(-1349.77295, 72.9853363, -1045.12964))
+                        elseif _G.SelectNPC == "Chemist" then
+                            topos(CFrame.new(-2777.45288, 72.9919434, -3572.25732))
+                        elseif _G.SelectNPC == "Ghoul Mark" then
+                            topos(CFrame.new(635.172546, 125.976357, 33219.832))
+                        elseif _G.SelectNPC == "Cyborg" then
+                            topos(CFrame.new(629.146851, 312.307373, -531.624146))
+                        elseif _G.SelectNPC == "Guashiem" then
+                            topos(CFrame.new(937.953003, 181.083359, 33277.9297))
+                        elseif _G.SelectNPC == "El Admin" then
+                            topos(CFrame.new(1322.80835, 126.345039, 33135.8789))
+                        elseif _G.SelectNPC == "El Rodolfo" then
+                            topos(CFrame.new(941.228699, 40.4686775, 32778.9922))
+                        elseif _G.SelectNPC == "Arowe" then
+                            topos(CFrame.new(-1994.51038, 125.519142, -72.2622986))
+                        
+                        -- NPCs MULTI-MUNDO (Checa qual o mapa atual via CurrentWorld)
+                        elseif _G.SelectNPC == "Random Devil Fruit" then
+                            if CurrentWorld == "World 1" then
+                                topos(CFrame.new(-1436.19727, 61.8777695, 4.75247526))
+                            elseif CurrentWorld == "World 3" then
+                                topos(CFrame.new(-12491, 337, -7449))
+                            end
+                        elseif _G.SelectNPC == "Blox Fruits Dealer" then
+                            if CurrentWorld == "World 1" then
+                                topos(CFrame.new(-923.255066, 7.67800522, 1608.61011))
+                            elseif CurrentWorld == "World 2" then
+                                topos(CFrame.new(-450.725464, 73.0458984, 355.636902))
+                            elseif CurrentWorld == "World 3" then
+                                topos(CFrame.new(-12511, 337, -7448))
+                            end
+                        elseif _G.SelectNPC == "Remove Devil Fruit" then
+                            if CurrentWorld == "World 1" then
+                                topos(CFrame.new(5664.80469, 64.677681, 867.85907))
+                            elseif CurrentWorld == "World 3" then
+                                topos(CFrame.new(-5571, 1089, -2661))
+                            end
+                            
+                        -- NPCs DO SEA 1
+                        elseif _G.SelectNPC == "Ability Teacher" then
+                            topos(CFrame.new(-1057.67822, 9.65220833, 1799.49146))
+                        elseif _G.SelectNPC == "Dark Step" then
+                            topos(CFrame.new(-987.873047, 13.7778397, 3989.4978))
+                        elseif _G.SelectNPC == "Electro" then
+                            topos(CFrame.new(-5389.49561, 13.283, -2149.80151))
+                        elseif _G.SelectNPC == "Fishman Karate" then
+                            topos(CFrame.new(61581.8047, 18.8965912, 987.832703))
+                            
+                        -- NPCs DO SEA 3
+                        elseif _G.SelectNPC == "Horned Man" then
+                            topos(CFrame.new(-11890, 931, -8760))
+                        elseif _G.SelectNPC == "Hungry Man" then
+                            topos(CFrame.new(-10919, 624, -10268))
+                        elseif _G.SelectNPC == "Previous Hero" then
+                            topos(CFrame.new(-10368, 332, -10128))
+                        elseif _G.SelectNPC == "Butler" then
+                            topos(CFrame.new(-5125, 316, -3130))
+                        elseif _G.SelectNPC == "Lunoven" then
+                            topos(CFrame.new(-5117, 316, -3093))
+                        elseif _G.SelectNPC == "Elite Hunter" then
+                            topos(CFrame.new(-5420, 314, -2828))
+                        elseif _G.SelectNPC == "Player Hunter" then
+                            topos(CFrame.new(-5559, 314, -2840))
+                        elseif _G.SelectNPC == "Uzoth" then
+                            topos(CFrame.new(-9785, 852, 6667))
+                        end
+                    end)
+                    task.wait(0.1)
+                end
+            end)
+        else
+            if StopTween then 
+                StopTween(_G.TeleportNPC) 
+            end
         end
     end
 })
