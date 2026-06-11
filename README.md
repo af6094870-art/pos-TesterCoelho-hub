@@ -105,21 +105,6 @@ SaveManager:SetIgnoreIndexes({})
 
 
 -- ========================================================
--- ABA CONFIG
-
-getgenv().Team = "Marines" -- O usuário escolhe aqui: "Pirates" ou "Marines"
-
--- Garante que o jogo terminou de carregar o mapa e a ReplicatedStorage
-repeat task.wait() until game:IsLoaded()
-
--- FAZ A VERIFICAÇÃO EXATA DOS DOIS TIMES PARA NÃO BUGAR NO SPAWN
-if getgenv().Team == "Pirates" then
-    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("SetTeam", "Pirates")
-elseif getgenv().Team == "Marines" then
-    game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("SetTeam", "Marines")
-end
-
-task.wait(4)
 
 local replicated = game:GetService("ReplicatedStorage")
 
